@@ -53,11 +53,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ── バックエンドインスタンスを初期化 ──
 const backends: Record<string, LLMBackend> = {
   openai: new OpenAIBackend(process.env.OPENAI_API_KEY || ''),
-  gemini: new GeminiBackend(
-    process.env.GCP_PROJECT_ID || '',
-    process.env.GCP_LOCATION || '',
-    process.env.GCP_ACCESS_TOKEN || ''
-  )
+  gemini: new GeminiBackend(process.env.GCP_ACCESS_TOKEN || '')
 };
 
 // ── モデル名からバックエンド & 実際のモデル名へのマッピング ──

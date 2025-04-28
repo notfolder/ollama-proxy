@@ -3,14 +3,10 @@ import { LLMBackend } from './base';
 import { GenerateRequest, BackendResponse, Message } from '../types';
 
 export class GeminiBackend extends LLMBackend {
-  private readonly projectId: string;
-  private readonly location: string;
   private readonly accessToken: string;
 
-  constructor(projectId: string, location: string, accessToken: string) {
+  constructor(accessToken: string) {
     super();
-    this.projectId = projectId;
-    this.location = location;
     this.accessToken = accessToken;
   }
 
