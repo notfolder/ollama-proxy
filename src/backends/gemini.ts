@@ -58,11 +58,11 @@ export class GeminiBackend extends LLMBackend {
         'Content-Type': 'application/json',
       },
       data: {
-        contents: [{ 
-          parts: messages.map(msg => ({
+        contents: messages.map(msg => ({
+          parts: [{
             text: msg.content
-          }))
-        }],
+          }]
+        })),
         generationConfig: {
           temperature: options.temperature ?? 0.7,
           top_p: options.top_p ?? 1,
