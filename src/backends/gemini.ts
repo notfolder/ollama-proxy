@@ -3,11 +3,11 @@ import { LLMBackend } from './base';
 import { GenerateRequest, BackendResponse, Message } from '../types';
 
 export class GeminiBackend extends LLMBackend {
-  private readonly accessToken: string;
+  private readonly apiKey: string;
 
-  constructor(accessToken: string) {
+  constructor(apiKey: string) {
     super();
-    this.accessToken = accessToken;
+    this.apiKey = apiKey;
   }
 
   async generate(request: GenerateRequest): Promise<BackendResponse> {
@@ -20,10 +20,9 @@ export class GeminiBackend extends LLMBackend {
       request.prompt;
 
     const response = await axios({
-      url: endpoint,
+      url: `${endpoint}?key=${this.apiKey}`,
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       },
       data: {
@@ -53,10 +52,9 @@ export class GeminiBackend extends LLMBackend {
       `https://generativelanguage.googleapis.com/v1beta/models/${options.model || 'gemini-pro'}:generateContent`;
 
     const response = await axios({
-      url: endpoint,
+      url: `${endpoint}?key=${this.apiKey}`,
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       },
       data: {
