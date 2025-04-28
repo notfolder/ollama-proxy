@@ -66,7 +66,12 @@ const modelMap: ModelMap = {
   codellama: { backend: 'gemini', model: 'chat-bison@001' },
 };
 
-// ルートの定義
+// OpenAI互換エンドポイント
+app.post('/v1/chat/completions', handleChat(backends, modelMap));
+app.post('/v1/completions', handleGenerate(backends, modelMap));
+app.get('/v1/models', handleListModels(backends, modelMap));
+
+// Ollamaオリジナルエンドポイント
 app.post('/api/generate', handleGenerate(backends, modelMap));
 app.post('/api/chat', handleChat(backends, modelMap));
 app.post('/api/create', (req: Request, res: Response) => {
