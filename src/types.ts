@@ -6,7 +6,7 @@ export interface Message {
 export interface GenerateRequest {
   model: string;
   messages: Message[];
-  stream: boolean;
+  stream?: boolean;
   options?: Record<string, any>;
 }
 
@@ -17,7 +17,16 @@ export interface ChatResponse {
   done: boolean;
 }
 
-export interface BackendResponse {
+export interface ModelMapping {
+  backend: 'openai' | 'gemini';
+  model: string;
+}
+
+export interface ModelMap {
+  [key: string]: ModelMapping;
+}
+
+export interface BackendResponse<T = any> {
   status: number;
-  data: any;
+  data: T;
 }
