@@ -76,7 +76,8 @@ export const handleChat = (
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
-                res.write('data: {"done": true}\n\n');
+                const doneResponse = { done: true };
+                res.write(`data: ${JSON.stringify(doneResponse)}\n\n`);
               } else {
                 try {
                   const parsed = JSON.parse(data);
@@ -85,7 +86,9 @@ export const handleChat = (
                     created_at: new Date().toISOString(),
                     message: {
                       role: 'assistant',
-                      content: parsed.choices?.[0]?.delta?.content || parsed.candidates?.[0]?.content || ''
+                      content: parsed.choices?.[0]?.delta?.content || 
+                              parsed.candidates?.[0]?.content || 
+                              ''
                     },
                     done: false
                   };
@@ -106,7 +109,7 @@ export const handleChat = (
           response.data.destroy();
         });
       } else {
-        const responseData = response.data;
+        const responseData = response.data || {};
         const content = responseData.choices?.[0]?.message?.content || 
                        responseData.candidates?.[0]?.content ||
                        '';

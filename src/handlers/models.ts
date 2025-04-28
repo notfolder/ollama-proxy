@@ -98,14 +98,31 @@ export const handleModelTags = (
     try {
       console.log('🏷️ モデルタグ一覧取得開始');
       
-      // 現在は利用可能なモデル名をタグとして返す
-      const tags = Object.keys(modelMap).map(key => ({
-        name: key,
-        tag: 'latest'  // 現在は全てlatestタグとする
-      }));
+      // モデルとタグの一覧を作成
+      const modelTags = Object.entries(modelMap).map(([modelName, info]) => {
+        return {
+          name: modelName,
+          tag: 'latest',  // 現在は全てlatestタグとする
+          size: 0,  // 現在は0固定
+          digest: '',  // 現在は空文字固定
+          modified_at: new Date().toISOString(),
+          details: {
+            format: 'unknown',
+            family: info.backend,
+            parameter_size: 'unknown',
+            quantization_level: 'unknown'
+          }
+        };
+      });
       
-      console.log('✅ モデルタグ一覧取得完了:', { tagCount: tags.length });
-      res.json({ tags });
+      console.log('✅ モデルタグ一覧取得完了:', { 
+        modelCount: modelTags.length,
+        models: modelTags 
+      });
+
+      // オブジェクトとしてJSONレスポンスを返す
+      const response = { models: modelTags };
+      res.json(response);
     } catch (error) {
       console.error('❌ モデルタグ一覧取得エラー:', error);
       res.status(500).json({ error: 'Internal server error' });

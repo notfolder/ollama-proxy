@@ -21,11 +21,13 @@ app.use(express.json());
 
 // リクエストのデバッグ用ミドルウェア
 app.use((req: Request, res: Response, next: NextFunction) => {
+  // undefinedの場合は空オブジェクトとして扱う
+  const safeBody = req.body || {};
   console.log('📨 リクエスト受信:', {
     method: req.method,
     path: req.path,
     query: req.query,
-    body: req.body,
+    body: JSON.parse(JSON.stringify(safeBody)),
     headers: req.headers
   });
   next();
@@ -35,11 +37,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use((req: Request, res: Response, next: NextFunction) => {
   const originalJson = res.json;
   res.json = function(body) {
+    // undefinedの場合は空オブジェクトとして扱う
+    const safeBody = body || {};
     console.log('📤 レスポンス送信:', {
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,
-      body
+      body: JSON.parse(JSON.stringify(safeBody))
     });
     return originalJson.call(this, body);
   };

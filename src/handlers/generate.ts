@@ -60,11 +60,12 @@ export const handleGenerate = (
         isStream: stream
       });
 
-      res.status(response.status);
+      res.status(response.status || 200);
       if (stream) {
         response.data.pipe(res);
       } else {
-        res.json(response.data);
+        const responseData = response.data || {};
+        res.json(responseData);
       }
 
     } catch (error: unknown) {
