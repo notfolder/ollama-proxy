@@ -19,7 +19,7 @@ import {
 const app = express();
 app.use(express.json());
 
-// デバッグ用ミドルウェア
+// リクエストのデバッグ用ミドルウェア
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('📨 リクエスト受信:', {
     method: req.method,
@@ -28,6 +28,21 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     body: req.body,
     headers: req.headers
   });
+  next();
+});
+
+// レスポンスのデバッグ用ミドルウェア
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const originalJson = res.json;
+  res.json = function(body) {
+    console.log('📤 レスポンス送信:', {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      body
+    });
+    return originalJson.call(this, body);
+  };
   next();
 });
 
