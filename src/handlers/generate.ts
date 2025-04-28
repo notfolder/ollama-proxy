@@ -20,11 +20,25 @@ export const handleGenerate = (
     try {
       const { model, prompt, stream = true, options = {} } = req.body;
 
+      console.log('🎯 生成リクエスト処理開始:', {
+        model,
+        promptLength: prompt.length,
+        stream,
+        options
+      });
+
       // モデル名マッチング
       const key = Object.keys(modelMap)
         .find(k => model.toLowerCase().startsWith(k));
       const target = key ? modelMap[key]
         : { backend: 'openai', model };  // デフォルトは OpenAI に流す
+
+      console.log('🔄 バックエンド選択:', {
+        requestedModel: model,
+        matchedKey: key,
+        targetBackend: target.backend,
+        targetModel: target.model
+      });
 
       const request: GenerateRequest = {
         model: target.model,
@@ -41,6 +55,11 @@ export const handleGenerate = (
 
       const response = await backend.generate(request);
       
+      console.log('✅ レスポンス受信:', {
+        status: response.status,
+        isStream: stream
+      });
+
       res.status(response.status);
       if (stream) {
         response.data.pipe(res);
@@ -49,6 +68,7 @@ export const handleGenerate = (
       }
 
     } catch (error: unknown) {
+      console.error('❌ エラー発生:', error);
       next(error);
     }
   };

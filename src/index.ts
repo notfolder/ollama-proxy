@@ -11,11 +11,25 @@ import {
   handleListModels, 
   handleModelOperation, 
   handleModelCopy, 
-  handleModelDelete 
+  handleModelDelete,
+  handleModelTags,  // 追加
+  handleModelShow   // 追加
 } from './handlers/models';
 
 const app = express();
 app.use(express.json());
+
+// デバッグ用ミドルウェア
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log('📨 リクエスト受信:', {
+    method: req.method,
+    path: req.path,
+    query: req.query,
+    body: req.body,
+    headers: req.headers
+  });
+  next();
+});
 
 // ── バックエンドインスタンスを初期化 ──
 const backends: Record<string, LLMBackend> = {
@@ -45,6 +59,8 @@ app.get('/api/models', handleListModels(backends, modelMap));
 app.post('/api/models/:model', handleModelOperation(backends, modelMap));
 app.post('/api/models/:model/copy', handleModelCopy(backends, modelMap));
 app.delete('/api/models/:model', handleModelDelete(backends, modelMap));
+app.get('/api/tags', handleModelTags(modelMap));  // 追加
+app.post('/api/show', handleModelShow(backends, modelMap));  // 追加
 
 // その他のエンドポイント
 app.post('/api/pull', (req: Request, res: Response) => {
