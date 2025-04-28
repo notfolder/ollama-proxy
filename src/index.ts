@@ -7,6 +7,12 @@ import type { Message, ModelMap } from './types';
 import { AxiosError } from 'axios';
 import { handleGenerate } from './handlers/generate';
 import { handleChat } from './handlers/chat';
+import { 
+  handleListModels, 
+  handleModelOperation, 
+  handleModelCopy, 
+  handleModelDelete 
+} from './handlers/models';
 
 const app = express();
 app.use(express.json());
@@ -30,28 +36,17 @@ const modelMap: ModelMap = {
 // ルートの定義
 app.post('/api/generate', handleGenerate(backends, modelMap));
 app.post('/api/chat', handleChat(backends, modelMap));
-
-// その他のエンドポイント
 app.post('/api/create', (req: Request, res: Response) => {
   res.status(501).json({ error: 'Not implemented' });
 });
 
-app.get('/api/models', (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
+// モデル関連のエンドポイント
+app.get('/api/models', handleListModels(backends, modelMap));
+app.post('/api/models/:model', handleModelOperation(backends, modelMap));
+app.post('/api/models/:model/copy', handleModelCopy(backends, modelMap));
+app.delete('/api/models/:model', handleModelDelete(backends, modelMap));
 
-app.post('/api/models/:model', (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
-
-app.post('/api/models/:model/copy', (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
-
-app.delete('/api/models/:model', (req: Request, res: Response) => {
-  res.status(501).json({ error: 'Not implemented' });
-});
-
+// その他のエンドポイント
 app.post('/api/pull', (req: Request, res: Response) => {
   res.status(501).json({ error: 'Not implemented' });
 });
