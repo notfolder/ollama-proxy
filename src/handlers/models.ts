@@ -2,7 +2,7 @@ import type { RequestHandler } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 import type { LLMBackend } from '../backends/base';
-import type { ModelMap } from '../types';
+import type { ModelInfo, ModelMap } from '../types';
 
 export const handleListModels = (
   backends: Record<string, LLMBackend>,
@@ -12,10 +12,18 @@ export const handleListModels = (
     try {
       console.log('📋 モデル一覧取得開始');
       
-      // 現在利用可能なモデルの一覧を返す
-      const models = Object.entries(modelMap).map(([key, mapping]) => ({
+      // 利用可能なモデルの一覧をOllama形式で返す
+      const models = Object.entries(modelMap).map(([key, mapping]): ModelInfo => ({
         name: key,
-        ...mapping
+        modified_at: new Date().toISOString(),
+        size: 0,
+        digest: '',
+        details: {
+          format: 'unknown',
+          family: mapping.backend,
+          parameter_size: 'unknown',
+          quantization_level: 'unknown'
+        }
       }));
       
       console.log('✅ モデル一覧取得完了:', { modelCount: models.length });
@@ -52,16 +60,28 @@ export const handleModelOperation = (
       }
       
       const modelInfo = modelMap[key];
+
+      // Ollama形式のレスポンス
+      const response: ModelInfo = {
+        name: key,
+        modified_at: new Date().toISOString(),
+        size: 0,
+        digest: '',
+        details: {
+          format: 'unknown',
+          family: modelInfo.backend,
+          parameter_size: 'unknown',
+          quantization_level: 'unknown'
+        }
+      };
+
       console.log('✅ モデル情報取得完了:', {
         name: key,
         backend: modelInfo.backend,
         model: modelInfo.model
       });
       
-      res.json({
-        name: key,
-        ...modelInfo
-      });
+      res.json(response);
     } catch (error) {
       console.error('❌ モデル情報取得エラー:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -88,45 +108,6 @@ export const handleModelDelete = (
     const { model } = req.params;
     console.log('⚠️ モデル削除未実装:', { requestedModel: model });
     res.status(501).json({ error: 'Not implemented' });
-  };
-};
-
-export const handleModelTags = (
-  modelMap: ModelMap
-): RequestHandler<ParamsDictionary, any, any, ParsedQs> => {
-  return async (req, res) => {
-    try {
-      console.log('🏷️ モデルタグ一覧取得開始');
-      
-      // モデルとタグの一覧を作成
-      const modelTags = Object.entries(modelMap).map(([modelName, info]) => {
-        return {
-          name: modelName,
-          tag: 'latest',  // 現在は全てlatestタグとする
-          size: 0,  // 現在は0固定
-          digest: '',  // 現在は空文字固定
-          modified_at: new Date().toISOString(),
-          details: {
-            format: 'unknown',
-            family: info.backend,
-            parameter_size: 'unknown',
-            quantization_level: 'unknown'
-          }
-        };
-      });
-      
-      console.log('✅ モデルタグ一覧取得完了:', { 
-        modelCount: modelTags.length,
-        models: modelTags 
-      });
-
-      // オブジェクトとしてJSONレスポンスを返す
-      const response = { models: modelTags };
-      res.json(response);
-    } catch (error) {
-      console.error('❌ モデルタグ一覧取得エラー:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
   };
 };
 
@@ -159,16 +140,13 @@ export const handleModelShow = (
       }
       
       const modelInfo = modelMap[key];
-      
-      // モデルの詳細情報を返す
-      // 現在は基本的な情報のみ
-      const details = {
+
+      // Ollama形式のレスポンス
+      const response: ModelInfo = {
         name: key,
-        model_type: modelInfo.backend,
-        backend_model: modelInfo.model,
         modified_at: new Date().toISOString(),
-        size: 0,  // 現在は0固定
-        digest: '',  // 現在は空文字固定
+        size: 0,
+        digest: '',
         details: {
           format: 'unknown',
           family: modelInfo.backend,
@@ -182,9 +160,44 @@ export const handleModelShow = (
         modelType: modelInfo.backend
       });
       
-      res.json(details);
+      res.json(response);
     } catch (error) {
       console.error('❌ モデル詳細情報取得エラー:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+};
+
+export const handleModelTags = (
+  modelMap: ModelMap
+): RequestHandler<ParamsDictionary, any, any, ParsedQs> => {
+  return async (req, res) => {
+    try {
+      console.log('🏷️ モデルタグ一覧取得開始');
+      
+      // モデルとタグの一覧を作成
+      const models = Object.entries(modelMap).map(([modelName, info]): ModelInfo => ({
+        name: modelName,
+        modified_at: new Date().toISOString(),
+        size: 0,
+        digest: '',
+        details: {
+          format: 'unknown',
+          family: info.backend,
+          parameter_size: 'unknown',
+          quantization_level: 'unknown'
+        }
+      }));
+      
+      console.log('✅ モデルタグ一覧取得完了:', { 
+        modelCount: models.length,
+        models: models
+      });
+
+      // Ollama形式のレスポンス
+      res.json({ models });
+    } catch (error) {
+      console.error('❌ モデルタグ一覧取得エラー:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };

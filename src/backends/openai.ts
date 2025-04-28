@@ -11,6 +11,19 @@ export class OpenAIBackend extends LLMBackend {
   }
 
   async generate(request: GenerateRequest): Promise<BackendResponse> {
+    // システムメッセージとユーザープロンプトを配列に変換
+    const messages = [];
+    if (request.system) {
+      messages.push({
+        role: 'system',
+        content: request.system
+      });
+    }
+    messages.push({
+      role: 'user',
+      content: request.prompt
+    });
+
     const response = await axios({
       url: 'https://api.openai.com/v1/chat/completions',
       method: 'POST',
@@ -20,7 +33,7 @@ export class OpenAIBackend extends LLMBackend {
       },
       data: {
         model: request.model,
-        messages: request.messages,
+        messages,
         stream: request.stream,
         ...request.options
       },

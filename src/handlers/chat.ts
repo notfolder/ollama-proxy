@@ -2,28 +2,28 @@ import type { RequestHandler } from 'express';
 import type { ParamsDictionary } from 'express-serve-static-core';
 import type { ParsedQs } from 'qs';
 import type { LLMBackend } from '../backends/base';
-import type { Message, ChatResponse } from '../types';
+import type { Message, ChatRequest, OllamaResponse } from '../types';
 import type { ModelMap } from '../types';
-
-interface ChatRequestBody {
-  model: string;
-  messages: Message[];
-  stream?: boolean;
-  options?: Record<string, any>;
-}
 
 export const handleChat = (
   backends: Record<string, LLMBackend>,
   modelMap: ModelMap
-): RequestHandler<ParamsDictionary, any, ChatRequestBody, ParsedQs> => {
+): RequestHandler<ParamsDictionary, any, ChatRequest, ParsedQs> => {
   return async (req, res, next) => {
     try {
-      const { model, messages, stream = false, options = {} } = req.body;
+      const { 
+        model, 
+        messages, 
+        stream = false, 
+        format,
+        options = {} 
+      } = req.body;
 
       console.log('💬 チャットリクエスト処理開始:', {
         model,
         messageCount: messages.length,
         stream,
+        hasFormat: !!format,
         options
       });
 
@@ -62,7 +62,8 @@ export const handleChat = (
       const response = await backend.chat(messages, {
         ...options,
         model: target.model,
-        stream
+        stream,
+        format
       });
       
       if (stream) {
@@ -76,21 +77,32 @@ export const handleChat = (
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
-                const doneResponse = { done: true };
+                const doneResponse: OllamaResponse = {
+                  model: target.model,
+                  created_at: new Date().toISOString(),
+                  done: true,
+                  total_duration: 0,
+                  load_duration: 0,
+                  prompt_eval_count: 0,
+                  eval_count: 0
+                };
                 res.write(`data: ${JSON.stringify(doneResponse)}\n\n`);
               } else {
                 try {
                   const parsed = JSON.parse(data);
-                  const chatResponse: ChatResponse = {
+                  const chatResponse: OllamaResponse = {
                     model: target.model,
                     created_at: new Date().toISOString(),
                     message: {
                       role: 'assistant',
                       content: parsed.choices?.[0]?.delta?.content || 
-                              parsed.candidates?.[0]?.content || 
-                              ''
+                              parsed.candidates?.[0]?.content || '',
                     },
-                    done: false
+                    done: false,
+                    total_duration: 0,
+                    load_duration: 0,
+                    prompt_eval_count: 0,
+                    eval_count: 0
                   };
                   res.write(`data: ${JSON.stringify(chatResponse)}\n\n`);
                 } catch (e) {
@@ -119,14 +131,18 @@ export const handleChat = (
           contentLength: content.length
         });
 
-        const chatResponse: ChatResponse = {
+        const chatResponse: OllamaResponse = {
           model: target.model,
           created_at: new Date().toISOString(),
           message: {
             role: 'assistant',
             content
           },
-          done: true
+          done: true,
+          total_duration: 0,
+          load_duration: 0,
+          prompt_eval_count: 0,
+          eval_count: 0
         };
 
         res.json(chatResponse);

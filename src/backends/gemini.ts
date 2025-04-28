@@ -18,6 +18,11 @@ export class GeminiBackend extends LLMBackend {
     const endpoint = 
       `https://generativelanguage.googleapis.com/v1beta/models/${request.model || 'gemini-pro'}:generateContent`;
 
+    // システムプロンプトとユーザープロンプトを結合
+    const content = request.system ? 
+      `${request.system}\n\n${request.prompt}` : 
+      request.prompt;
+
     const response = await axios({
       url: endpoint,
       method: 'POST',
@@ -27,15 +32,15 @@ export class GeminiBackend extends LLMBackend {
       },
       data: {
         contents: [{ 
-          parts: request.messages.map(msg => ({
-            text: msg.content
-          }))
+          parts: [{
+            text: content
+          }]
         }],
         generationConfig: {
           temperature: request.options?.temperature ?? 0.7,
-          topP: request.options?.topP ?? 1,
-          topK: request.options?.topK ?? 32,
-          maxOutputTokens: request.options?.maxOutputTokens,
+          top_p: request.options?.top_p ?? 1,
+          top_k: request.options?.top_k ?? 32,
+          maxOutputTokens: request.options?.num_predict,
         },
       },
       responseType: request.stream ? 'stream' : 'json'
@@ -60,16 +65,15 @@ export class GeminiBackend extends LLMBackend {
       },
       data: {
         contents: [{ 
-          // messagesをGemini APIの形式に変換
           parts: messages.map(msg => ({
             text: msg.content
           }))
         }],
         generationConfig: {
           temperature: options.temperature ?? 0.7,
-          topP: options.topP ?? 1,
-          topK: options.topK ?? 32,
-          maxOutputTokens: options.maxOutputTokens,
+          top_p: options.top_p ?? 1,
+          top_k: options.top_k ?? 32,
+          maxOutputTokens: options.num_predict,
         },
       },
       responseType: options.stream ? 'stream' : 'json'
