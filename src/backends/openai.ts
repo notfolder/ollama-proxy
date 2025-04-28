@@ -42,7 +42,8 @@ export class OpenAIBackend extends LLMBackend {
         'Content-Type': 'application/json',
       },
       data: {
-        model: options.model || 'gpt-4',
+        // デフォルトでgpt-3.5-turboを使用。必要に応じてoptionsでgpt-4等に上書き可能
+        model: options.model || 'gpt-3.5-turbo',
         messages,
         stream: options.stream || false,
         ...options

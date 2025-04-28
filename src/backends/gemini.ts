@@ -16,10 +16,7 @@ export class GeminiBackend extends LLMBackend {
 
   async generate(request: GenerateRequest): Promise<BackendResponse> {
     const endpoint = 
-      `https://us-central1-aiplatform.googleapis.com/v1/` +
-      `projects/${this.projectId}/` +
-      `locations/${this.location}/` +
-      `publishers/google/models/${request.model}:generateMessage`;
+      `https://generativelanguage.googleapis.com/v1beta/models/${request.model || 'gemini-pro'}:generateContent`;
 
     const response = await axios({
       url: endpoint,
@@ -29,8 +26,17 @@ export class GeminiBackend extends LLMBackend {
         'Content-Type': 'application/json',
       },
       data: {
-        prompt: { messages: request.messages },
-        temperature: request.options?.temperature ?? 0.7,
+        contents: [{ 
+          parts: request.messages.map(msg => ({
+            text: msg.content
+          }))
+        }],
+        generationConfig: {
+          temperature: request.options?.temperature ?? 0.7,
+          topP: request.options?.topP ?? 1,
+          topK: request.options?.topK ?? 32,
+          maxOutputTokens: request.options?.maxOutputTokens,
+        },
       },
       responseType: request.stream ? 'stream' : 'json'
     });
@@ -43,10 +49,7 @@ export class GeminiBackend extends LLMBackend {
 
   async chat(messages: Message[], options: Record<string, any> = {}): Promise<BackendResponse> {
     const endpoint = 
-      `https://us-central1-aiplatform.googleapis.com/v1/` +
-      `projects/${this.projectId}/` +
-      `locations/${this.location}/` +
-      `publishers/google/models/${options.model || 'chat-bison@001'}:generateMessage`;
+      `https://generativelanguage.googleapis.com/v1beta/models/${options.model || 'gemini-pro'}:generateContent`;
 
     const response = await axios({
       url: endpoint,
@@ -56,9 +59,18 @@ export class GeminiBackend extends LLMBackend {
         'Content-Type': 'application/json',
       },
       data: {
-        prompt: { messages },
-        temperature: options.temperature ?? 0.7,
-        ...options
+        contents: [{ 
+          // messagesをGemini APIの形式に変換
+          parts: messages.map(msg => ({
+            text: msg.content
+          }))
+        }],
+        generationConfig: {
+          temperature: options.temperature ?? 0.7,
+          topP: options.topP ?? 1,
+          topK: options.topK ?? 32,
+          maxOutputTokens: options.maxOutputTokens,
+        },
       },
       responseType: options.stream ? 'stream' : 'json'
     });
