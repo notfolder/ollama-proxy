@@ -63,7 +63,7 @@ const backends: Record<string, LLMBackend> = {
 // ── モデル名からバックエンド & 実際のモデル名へのマッピング ──
 const modelMap: ModelMap = {
   openai: { backend: 'openai', model: 'gpt-4' },
-  gemini: { backend: 'gemini', model: 'chat-bison@001' },
+  gemini: { backend: 'gemini', model: 'gemini-pro' },
 };
 
 // OpenAI互換エンドポイント
