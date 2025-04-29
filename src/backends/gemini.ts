@@ -52,11 +52,11 @@ export class GeminiBackend extends LLMBackend {
         request.prompt;
 
       const response = await axios({
-        url: endpoint,
+        // APIキーをクエリパラメータとして渡す（Gemini API標準の認証方法）
+        url: `${endpoint}?key=${this.apiKey}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
         },
         data: {
           contents: [{ 
@@ -118,11 +118,11 @@ export class GeminiBackend extends LLMBackend {
       });
       
       const response = await axios({
-        url: endpoint,
+        // APIキーをクエリパラメータとして渡す（Gemini API標準の認証方法）
+        url: `${endpoint}?key=${this.apiKey}`,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`
         },
         data: {
           contents: formattedMessages,
