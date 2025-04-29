@@ -26,9 +26,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   console.log('📨 リクエスト受信:', {
     method: req.method,
     path: req.path,
-    query: req.query,
-    body: JSON.parse(JSON.stringify(safeBody)),
-    headers: req.headers
+    // query: req.query,
+    // body: JSON.parse(JSON.stringify(safeBody))
   });
   next();
 });
@@ -43,7 +42,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       method: req.method,
       path: req.path,
       statusCode: res.statusCode,
-      body: JSON.parse(JSON.stringify(safeBody))
+      // body: JSON.parse(JSON.stringify(safeBody))
     });
     return originalJson.call(this, body);
   };
@@ -107,14 +106,14 @@ app.get('/api/version', (req: Request, res: Response) => {
   res.status(501).json({ error: 'Not implemented' });
 });
 
-// エラーハンドリングミドルウェア
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err);
-  const error = err as AxiosError;
-  const status = error.response?.status || 500;
-  const data = error.response?.data || error.message || 'Unknown error';
-  res.status(status).json({ error: data });
-});
+// // エラーハンドリングミドルウェア
+// app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+//   console.error(err);
+//   const error = err as AxiosError;
+//   const status = error.response?.status || 500;
+//   const data = error.response?.data || error.message || 'Unknown error';
+//   res.status(status).json({ error: data });
+// });
 
 const PORT = process.env.PORT || 11434;
 app.listen(PORT, () => {

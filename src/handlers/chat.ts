@@ -19,14 +19,6 @@ export const handleChat = (
         options = {} 
       } = req.body;
 
-      console.log('💬 チャットリクエスト処理開始:', {
-        model,
-        messageCount: messages.length,
-        stream,
-        hasFormat: !!format,
-        options
-      });
-
       // バリデーション
       if (!messages || !Array.isArray(messages) || messages.length === 0) {
         res.status(400).json({ error: 'Messages array is required and must not be empty' });
@@ -45,13 +37,6 @@ export const handleChat = (
         .find(k => model.toLowerCase().startsWith(k));
       const target = key ? modelMap[key]
         : { backend: 'openai', model };  // デフォルトは OpenAI に流す
-
-      console.log('🎯 バックエンド選択:', {
-        requestedModel: model,
-        matchedKey: key,
-        targetBackend: target.backend,
-        targetModel: target.model
-      });
 
       const backend = backends[target.backend];
       if (!backend) {
@@ -125,11 +110,6 @@ export const handleChat = (
         const content = responseData.choices?.[0]?.message?.content || 
                        responseData.candidates?.[0]?.content ||
                        '';
-
-        console.log('✅ レスポンス生成完了:', {
-          model: target.model,
-          contentLength: content.length
-        });
 
         const chatResponse: OllamaResponse = {
           model: target.model,

@@ -22,27 +22,11 @@ export const handleGenerate = (
         options = {} 
       } = req.body;
 
-      console.log('🎯 生成リクエスト処理開始:', {
-        model,
-        promptLength: prompt.length,
-        stream,
-        hasSystem: !!system,
-        hasTemplate: !!template,
-        options
-      });
-
       // モデル名マッチング
       const key = Object.keys(modelMap)
         .find(k => model.toLowerCase().startsWith(k));
       const target = key ? modelMap[key]
         : { backend: 'openai', model };  // デフォルトは OpenAI に流す
-
-      console.log('🔄 バックエンド選択:', {
-        requestedModel: model,
-        matchedKey: key,
-        targetBackend: target.backend,
-        targetModel: target.model
-      });
 
       const backend = backends[target.backend];
       if (!backend) {
@@ -66,11 +50,6 @@ export const handleGenerate = (
         }
       });
       
-      console.log('✅ レスポンス受信:', {
-        status: response.status,
-        isStream: stream
-      });
-
       res.status(response.status || 200);
       if (stream) {
         response.data.pipe(res);

@@ -10,8 +10,6 @@ export const handleListModels = (
 ): RequestHandler<ParamsDictionary, any, any, ParsedQs> => {
   return async (req, res) => {
     try {
-      console.log('📋 モデル一覧取得開始');
-      
       // 利用可能なモデルの一覧をOllama形式で返す
       const models = Object.entries(modelMap).map(([key, mapping]): ModelInfo => ({
         name: key,
@@ -26,7 +24,6 @@ export const handleListModels = (
         }
       }));
       
-      console.log('✅ モデル一覧取得完了:', { modelCount: models.length });
       res.json({ models });
     } catch (error) {
       console.error('❌ モデル一覧取得エラー:', error);
@@ -47,8 +44,6 @@ export const handleModelOperation = (
     const { model } = req.params;
     
     try {
-      console.log('🔍 モデル情報取得:', { requestedModel: model });
-      
       // モデル名マッチング
       const key = Object.keys(modelMap)
         .find(k => model.toLowerCase().startsWith(k));
@@ -75,12 +70,6 @@ export const handleModelOperation = (
         }
       };
 
-      console.log('✅ モデル情報取得完了:', {
-        name: key,
-        backend: modelInfo.backend,
-        model: modelInfo.model
-      });
-      
       res.json(response);
     } catch (error) {
       console.error('❌ モデル情報取得エラー:', error);
@@ -124,11 +113,6 @@ export const handleModelShow = (
     const { name, system = false } = req.body;
     
     try {
-      console.log('🔍 モデル詳細情報取得:', { 
-        requestedModel: name,
-        system
-      });
-      
       // モデル名マッチング
       const key = Object.keys(modelMap)
         .find(k => name.toLowerCase().startsWith(k));
@@ -155,11 +139,6 @@ export const handleModelShow = (
         }
       };
 
-      console.log('✅ モデル詳細情報取得完了:', {
-        name: key,
-        modelType: modelInfo.backend
-      });
-      
       res.json(response);
     } catch (error) {
       console.error('❌ モデル詳細情報取得エラー:', error);
@@ -173,8 +152,6 @@ export const handleModelTags = (
 ): RequestHandler<ParamsDictionary, any, any, ParsedQs> => {
   return async (req, res) => {
     try {
-      console.log('🏷️ モデルタグ一覧取得開始');
-      
       // モデルとタグの一覧を作成
       const models = Object.entries(modelMap).map(([modelName, info]): ModelInfo => ({
         name: modelName,
@@ -189,11 +166,6 @@ export const handleModelTags = (
         }
       }));
       
-      console.log('✅ モデルタグ一覧取得完了:', { 
-        modelCount: models.length,
-        models: models
-      });
-
       // Ollama形式のレスポンス
       res.json({ models });
     } catch (error) {
