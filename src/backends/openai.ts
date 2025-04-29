@@ -83,9 +83,20 @@ export class OpenAIBackend extends LLMBackend {
         }
       });
 
+      // APIから取得したモデル一覧から「gpt-」で始まるモデルのみをフィルタリング
+      const gptModels = response.data.data.filter((model: any) => 
+        model.id.startsWith('gpt-')
+      );
+      
+      console.log(`OpenAI: 「gpt-」で始まる${gptModels.length}個のモデルを取得しました`);
+      
+      // フィルタリングしたモデルのみを含むレスポンスを返す
       return {
         status: response.status,
-        data: response.data
+        data: {
+          object: response.data.object,
+          data: gptModels
+        }
       };
     } catch (error: unknown) {
       // エラーを型安全に処理
