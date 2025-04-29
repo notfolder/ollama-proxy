@@ -12,9 +12,13 @@ import {
   handleModelOperation, 
   handleModelCopy, 
   handleModelDelete,
-  handleModelTags,  // 追加
-  handleModelShow   // 追加
+  handleModelTags,
+  handleModelShow
 } from './handlers/models';
+// OpenAI互換ハンドラーをインポート
+import { handleOpenAIChat } from './handlers/openai/chat';
+import { handleOpenAICompletions } from './handlers/openai/completions';
+import { handleOpenAIModels } from './handlers/openai/models';
 
 const app = express();
 app.use(express.json());
@@ -66,9 +70,9 @@ const modelMap: ModelMap = {
 };
 
 // OpenAI互換エンドポイント
-app.post('/v1/chat/completions', handleChat(backends, modelMap));
-app.post('/v1/completions', handleGenerate(backends, modelMap));
-app.get('/v1/models', handleListModels(backends, modelMap));
+app.post('/v1/chat/completions', handleOpenAIChat(backends, modelMap));
+app.post('/v1/completions', handleOpenAICompletions(backends, modelMap));
+app.get('/v1/models', handleOpenAIModels(backends, modelMap));
 
 // Ollamaオリジナルエンドポイント
 app.post('/api/generate', handleGenerate(backends, modelMap));
@@ -82,8 +86,8 @@ app.get('/api/models', handleListModels(backends, modelMap));
 app.post('/api/models/:model', handleModelOperation(backends, modelMap));
 app.post('/api/models/:model/copy', handleModelCopy(backends, modelMap));
 app.delete('/api/models/:model', handleModelDelete(backends, modelMap));
-app.get('/api/tags', handleModelTags(modelMap));  // 追加
-app.post('/api/show', handleModelShow(backends, modelMap));  // 追加
+app.get('/api/tags', handleModelTags(modelMap));
+app.post('/api/show', handleModelShow(backends, modelMap));
 
 // その他のエンドポイント
 app.post('/api/pull', (req: Request, res: Response) => {

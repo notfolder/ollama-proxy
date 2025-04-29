@@ -107,3 +107,72 @@ export interface BackendResponse<T = any> {
   status: number;
   data: T;
 }
+
+// OpenAI互換レスポンス型
+export interface OpenAICompletionChoice {
+  text: string;
+  index: number;
+  logprobs: null;
+  finish_reason: string;
+}
+
+export interface OpenAICompletionResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: OpenAICompletionChoice[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface OpenAIChatChoice {
+  index: number;
+  message: Message;
+  finish_reason: string;
+}
+
+export interface OpenAIChatResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: OpenAIChatChoice[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
+export interface OpenAIChatStreamChoice {
+  delta: Partial<Message>;
+  index: number;
+  finish_reason: string | null;
+}
+
+export interface OpenAIChatStreamResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: OpenAIChatStreamChoice[];
+}
+
+export interface OpenAIModel {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+  permission: any[];
+  root: string;
+  parent: null;
+}
+
+export interface OpenAIModelsResponse {
+  object: string;
+  data: OpenAIModel[];
+}

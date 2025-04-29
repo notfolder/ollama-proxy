@@ -1,0 +1,10 @@
+POST http://localhost:11434/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "openai",
+  "messages": [
+    {"role": "user", "content": "こんにちは"}
+  ],
+  "stream": false
+}
