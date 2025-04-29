@@ -4,7 +4,7 @@ import { OpenAIBackend } from './backends/openai';
 import { GeminiBackend } from './backends/gemini';
 import { OllamaBackend } from './backends/ollama';
 import { LLMBackend } from './backends/base';
-import type { Message, ModelMap } from './types';
+import type { Message, ModelMap, OpenAIModelsResponse } from './types';
 import { AxiosError } from 'axios';
 import { handleGenerate } from './handlers/generate';
 import { handleChat } from './handlers/chat';
@@ -75,6 +75,123 @@ const modelMap: ModelMap = {
   mixtral: { backend: 'ollama', model: 'mixtral' },
 };
 
+// モデルマッピングを自動的に構築する関数
+async function buildModelMap(): Promise<ModelMap> {
+  const dynamicModelMap: ModelMap = {};
+  
+  // 各バックエンドからモデル一覧を取得して処理
+  try {
+    // OpenAIモデルを取得
+    try {
+      const openaiRes = await backends.openai.listModels();
+      if (openaiRes.status === 200) {
+        const models = (openaiRes.data as OpenAIModelsResponse).data;
+        for (const model of models) {
+          // モデル名をエイリアスとして使用（可能な限り短くする）
+          const modelName = model.id;
+          const alias = modelName.replace(/^gpt-/, ''); // 例: gpt-4-turbo -> 4-turbo
+          dynamicModelMap[alias] = { backend: 'openai', model: modelName };
+          
+          // サポートされている主要モデルに標準的なエイリアスを追加
+          if (modelName.includes('gpt-4')) {
+            dynamicModelMap.gpt4 = { backend: 'openai', model: modelName };
+          } else if (modelName.includes('gpt-3.5-turbo')) {
+            dynamicModelMap.gpt35 = { backend: 'openai', model: modelName };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('OpenAIモデル取得エラー:', error);
+    }
+    
+    // Geminiモデルを取得
+    try {
+      const geminiRes = await backends.gemini.listModels();
+      if (geminiRes.status === 200) {
+        const models = geminiRes.data.models || [];
+        for (const model of models) {
+          // モデル名をエイリアスとして使用
+          const modelName = model.name.split('/').pop() || model.name;
+          dynamicModelMap[modelName] = { backend: 'gemini', model: model.name };
+          
+          // gemini-proとgemini-proなどの基本モデルに短いエイリアスを追加
+          if (modelName === 'gemini-pro') {
+            dynamicModelMap.gemini = { backend: 'gemini', model: model.name };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Geminiモデル取得エラー:', error);
+    }
+    
+    // Ollamaモデルを取得
+    try {
+      const ollamaRes = await backends.ollama.listModels();
+      if (ollamaRes.status === 200) {
+        // Ollamaの/api/tagsエンドポイントのレスポンス形式に合わせて取得
+        const models = ollamaRes.data.models || [];
+        
+        if (Array.isArray(models)) {
+          for (const model of models) {
+            // Ollamaのレスポンスからモデル名を取得
+            const modelName = model.name || '';
+            if (!modelName) continue;
+            
+            dynamicModelMap[modelName] = { backend: 'ollama', model: modelName };
+            
+            // 一般的なモデルには短いエイリアスも追加
+            if (modelName.startsWith('llama2')) {
+              dynamicModelMap.llama = { backend: 'ollama', model: modelName };
+            } else if (modelName.startsWith('mistral')) {
+              dynamicModelMap.mistral = { backend: 'ollama', model: modelName };
+            } else if (modelName.startsWith('mixtral')) {
+              dynamicModelMap.mixtral = { backend: 'ollama', model: modelName };
+            }
+          }
+        } else {
+          // 'models'が配列でない場合、レスポンスの形式は異なる可能性がある
+          // Ollamaの応答形式を確認してログに出力
+          console.log('Ollamaの応答形式:', ollamaRes.data);
+          
+          // 応答が{models: [{name: '...'}, ...]}ではなく、単に[{name: '...'}, ...]の形式の場合
+          const tagsArray = Array.isArray(ollamaRes.data) ? ollamaRes.data : [];
+          
+          for (const tag of tagsArray) {
+            const modelName = tag.name || '';
+            if (!modelName) continue;
+            
+            dynamicModelMap[modelName] = { backend: 'ollama', model: modelName };
+            
+            // 一般的なモデルには短いエイリアスも追加
+            if (modelName.startsWith('llama2')) {
+              dynamicModelMap.llama = { backend: 'ollama', model: modelName };
+            } else if (modelName.startsWith('mistral')) {
+              dynamicModelMap.mistral = { backend: 'ollama', model: modelName };
+            } else if (modelName.startsWith('mixtral')) {
+              dynamicModelMap.mixtral = { backend: 'ollama', model: modelName };
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Ollamaモデル取得エラー:', error);
+    }
+    
+    console.log('動的モデルマッピング生成完了:', dynamicModelMap);
+    return dynamicModelMap;
+  } catch (error) {
+    console.error('モデルマッピング構築エラー:', error);
+    // エラーが発生した場合はデフォルトのマッピングを返す
+    return {
+      openai: { backend: 'openai', model: 'gpt-4-turbo' },
+      gemini: { backend: 'gemini', model: 'gemini-pro' },
+      llama2: { backend: 'ollama', model: 'llama2' },
+      mistral: { backend: 'ollama', model: 'mistral' },
+      mixtral: { backend: 'ollama', model: 'mixtral' }
+    };
+  }
+}
+
 // OpenAI互換エンドポイント
 app.post('/v1/chat/completions', handleOpenAIChat(backends, modelMap));
 app.post('/v1/completions', handleOpenAICompletions(backends, modelMap));
@@ -126,6 +243,23 @@ app.get('/api/version', (req: Request, res: Response) => {
 // });
 
 const PORT = process.env.PORT || 11434;
-app.listen(PORT, () => {
-  console.log(`Ollama プロトコル互換サーバー (stubs) running on port ${PORT}`);
-});
+
+// 起動時にモデルマップを自動的に構築する
+(async () => {
+  console.log('各バックエンドからモデル情報を取得中...');
+  try {
+    const dynamicModelMap = await buildModelMap();
+    // 既存のモデルマップをクリアして動的に生成したマッピングで上書き
+    Object.keys(modelMap).forEach(key => delete modelMap[key]);
+    Object.assign(modelMap, dynamicModelMap);
+    console.log('モデルマッピングを自動的に構築しました:', modelMap);
+  } catch (error) {
+    console.error('モデルマッピングの自動構築に失敗しました:', error);
+    console.log('デフォルトのモデルマッピングを使用します:', modelMap);
+  }
+  
+  // サーバーを起動
+  app.listen(PORT, () => {
+    console.log(`Ollama プロトコル互換サーバー running on port ${PORT}`);
+  });
+})();
