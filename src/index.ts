@@ -2,6 +2,7 @@ import express from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { OpenAIBackend } from './backends/openai';
 import { GeminiBackend } from './backends/gemini';
+import { OllamaBackend } from './backends/ollama';
 import { LLMBackend } from './backends/base';
 import type { Message, ModelMap } from './types';
 import { AxiosError } from 'axios';
@@ -56,17 +57,22 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // ── バックエンドインスタンスを初期化 ──
 const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
 const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 
 // ── バックエンドインスタンスを初期化 ──
 const backends: Record<string, LLMBackend> = {
   openai: new OpenAIBackend(process.env.OPENAI_API_KEY || '', OPENAI_BASE_URL),
-  gemini: new GeminiBackend(process.env.GCP_ACCESS_TOKEN || '', GEMINI_BASE_URL)
+  gemini: new GeminiBackend(process.env.GCP_ACCESS_TOKEN || '', GEMINI_BASE_URL),
+  ollama: new OllamaBackend(OLLAMA_BASE_URL)
 };
 
 // ── モデル名からバックエンド & 実際のモデル名へのマッピング ──
 const modelMap: ModelMap = {
   openai: { backend: 'openai', model: 'gpt-4.1-mini' },
   gemini: { backend: 'gemini', model: 'gemini-pro' },
+  llama2: { backend: 'ollama', model: 'llama2' },
+  mistral: { backend: 'ollama', model: 'mistral' },
+  mixtral: { backend: 'ollama', model: 'mixtral' },
 };
 
 // OpenAI互換エンドポイント

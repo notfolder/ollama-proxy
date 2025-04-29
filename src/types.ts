@@ -98,7 +98,7 @@ export interface ModelInfo {
 
 export interface ModelMap {
   [key: string]: {
-    backend: 'openai' | 'gemini';
+    backend: 'openai' | 'gemini' | 'ollama';
     model: string;
   };
 }
