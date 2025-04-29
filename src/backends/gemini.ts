@@ -4,15 +4,17 @@ import { GenerateRequest, BackendResponse, Message } from '../types';
 
 export class GeminiBackend extends LLMBackend {
   private readonly apiKey: string;
+  private readonly baseUrl: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, baseUrl: string) {
     super();
     this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
   }
 
   async generate(request: GenerateRequest): Promise<BackendResponse> {
     const endpoint = 
-      `https://generativelanguage.googleapis.com/v1beta/models/${request.model || 'gemini-pro'}:generateContent`;
+      `${this.baseUrl}/models/${request.model || 'gemini-pro'}:generateContent`;
 
     // システムプロンプトとユーザープロンプトを結合
     const content = request.system ? 
@@ -49,7 +51,7 @@ export class GeminiBackend extends LLMBackend {
 
   async chat(messages: Message[], options: Record<string, any> = {}): Promise<BackendResponse> {
     const endpoint = 
-      `https://generativelanguage.googleapis.com/v1beta/models/${options.model || 'gemini-pro'}:generateContent`;
+      `${this.baseUrl}/models/${options.model || 'gemini-pro'}:generateContent`;
 
     const response = await axios({
       url: `${endpoint}?key=${this.apiKey}`,

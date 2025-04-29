@@ -4,10 +4,12 @@ import { GenerateRequest, BackendResponse, Message } from '../types';
 
 export class OpenAIBackend extends LLMBackend {
   private readonly apiKey: string;
+  private readonly baseUrl: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, baseUrl: string) {
     super();
     this.apiKey = apiKey;
+    this.baseUrl = baseUrl;
   }
 
   async generate(request: GenerateRequest): Promise<BackendResponse> {
@@ -25,7 +27,7 @@ export class OpenAIBackend extends LLMBackend {
     });
 
     const response = await axios({
-      url: 'https://api.openai.com/v1/chat/completions',
+      url: `${this.baseUrl}/chat/completions`,
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
@@ -48,7 +50,7 @@ export class OpenAIBackend extends LLMBackend {
 
   async chat(messages: Message[], options: Record<string, any> = {}): Promise<BackendResponse> {
     const response = await axios({
-      url: 'https://api.openai.com/v1/chat/completions',
+      url: `${this.baseUrl}/chat/completions`,
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,

@@ -51,9 +51,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // ── バックエンドインスタンスを初期化 ──
+const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
+const GEMINI_BASE_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta';
+
+// ── バックエンドインスタンスを初期化 ──
 const backends: Record<string, LLMBackend> = {
-  openai: new OpenAIBackend(process.env.OPENAI_API_KEY || ''),
-  gemini: new GeminiBackend(process.env.GCP_ACCESS_TOKEN || '')
+  openai: new OpenAIBackend(process.env.OPENAI_API_KEY || '', OPENAI_BASE_URL),
+  gemini: new GeminiBackend(process.env.GCP_ACCESS_TOKEN || '', GEMINI_BASE_URL)
 };
 
 // ── モデル名からバックエンド & 実際のモデル名へのマッピング ──
