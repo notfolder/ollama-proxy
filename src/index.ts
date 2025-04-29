@@ -89,8 +89,7 @@ async function buildModelMap(): Promise<ModelMap> {
         for (const model of models) {
           // モデル名をエイリアスとして使用（可能な限り短くする）
           const modelName = model.id;
-          const alias = modelName.replace(/^gpt-/, ''); // 例: gpt-4-turbo -> 4-turbo
-          dynamicModelMap[alias] = { backend: 'openai', model: modelName };
+          dynamicModelMap[modelName] = { backend: 'openai', model: modelName };
           
           // サポートされている主要モデルに標準的なエイリアスを追加
           if (modelName.includes('gpt-4')) {
